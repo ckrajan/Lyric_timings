@@ -13,7 +13,7 @@
   margin-left: 300px;
 }
 
-#dropdown{
+#dropdown {
   margin-top: 40px;
   margin-left: 400px;
   position: absolute;
@@ -26,9 +26,9 @@
 }
 
 .form-control {
-  height:1300px;
-  width:800px;
+  height: 1300px;
+  width: 800px;
   font-family: Verdana, Tahoma, Arial, Helvetica, sans-serif;
-  font-size: 120%;
-  overflow:scroll;
-  }
+  font-size: 140%;
+  overflow: scroll;
+}

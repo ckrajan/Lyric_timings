@@ -32,6 +32,15 @@ var frame;
 
 var start_time_sec = 0;
 var start_time = "00:00.00";
+var c = 0;
+var start_time_arr = [];
+var st = 1;
+
+function containsNumbers(str) {
+    return /\d/.test(str);
+}
+
+start_time_arr[0] = "00:00.00";
 
 document.body.onkeyup = function (e) {
     if (e.key == "c" ||
@@ -51,24 +60,24 @@ document.body.onkeyup = function (e) {
         export_csv.style.display = "block";
 
         if (video_scr.currentTime) {
-            var sec_num = video_scr.currentTime.toFixed(2);
+            var sec_num = video_scr.currentTime;
         }
         else {
-            var sec_num = video_scr_select.currentTime.toFixed(2);
+            var sec_num = video_scr_select.currentTime;
         }
 
         var hours = Math.floor(sec_num / 3600);
         var minutes = Math.floor(sec_num / 60) % 60;
         var seconds = sec_num % 60;
 
-        if (hours <= 9) {
+        if (hours < 10) {
             hours = '0' + hours;
         }
-        if (minutes <= 9) {
+        if (minutes < 10) {
             minutes = '0' + minutes;
         }
-        if (seconds <= 9) {
-            seconds = '0' + seconds;
+        if (seconds < 10) {
+            seconds = '0' + seconds.toFixed(2);
         }
 
         if (hours == 0) {
@@ -77,14 +86,34 @@ document.body.onkeyup = function (e) {
             time_arr_sec.push(sec_num);
         }
 
-        if (hours == 0) {
-            time_arr.push(minutes + ":" + seconds.toFixed(2));
-        } else {
-            time_arr.push(hours + ":" + minutes + ":" + seconds.toFixed(2));
-        }
+        var length = seconds.toString().length - (seconds.toString().indexOf('.') + 1);
 
-        if (counter == 0) {
-            rows[counter] = [ "Start time", "End time" ];
+        if (hours == 0) {
+            if (length > 2) {
+                time_arr.push(minutes + ":" + seconds.toFixed(2));
+            }
+            else if (length == 1) {
+                time_arr.push(minutes + ":" + seconds.toString().replace(".", ".0"));
+            }
+            else if (length == 0) {
+                time_arr.push(minutes + ":" + seconds + ".00");
+            }
+            else {
+                time_arr.push(minutes + ":" + seconds);
+            }
+        } else {
+            if (length > 2) {
+                time_arr.push(hours + ":" + minutes + ":" + seconds.toFixed(2));
+            }
+            else if (length == 1) {
+                time_arr.push(hours + ":" + minutes + ":" + seconds.toString().replace(".", ".0"));
+            }
+            else if (length == 0) {
+                time_arr.push(hours + ":" + minutes + ":" + seconds + ".00");
+            }
+            else {
+                time_arr.push(hours + ":" + minutes + ":" + seconds);
+            }
         }
 
         counter++;
@@ -94,14 +123,27 @@ document.body.onkeyup = function (e) {
 
         split_name++;
         ls.style.display = "block";
-        ls.innerHTML += '<div id="box' + counter + '" style="color:rgb(31, 87, 37); font-size: 18px;"><i style="color:red; id="trash' + counter + '" class="fas fa-trash" onclick="removeItem(this);"></i> Start time: ' + start_time + '; End time: ' + end_time + '</div>';
+
+        // var rem_quo = csv_val_arr[c]; && containsNumbers(rem_quo) == false && rem_quo != '"'
+
+        // else {
+        //     rows[counter] = [csv_val_str_final[c].replace('"', '')];
+        //     // ls.innerHTML += '<div id="box' + counter + '" style="color:rgb(31, 87, 37); font-size: 18px;"> ' + csv_val_arr[c].replace('"', '') + '</div>';
+        // }
+
+        c++;
+
+        start_time_arr.push(end_time);
 
         if (counter > 0) {
-            rows[counter] = [ start_time, end_time ];
+            rows[counter] = ["[" + start_time_arr[st] + "]" + csv_val_str_final[c].replace('"', '')];
+            ls.innerHTML += '<div id="box' + counter + '" style="color:rgb(31, 87, 37); font-size: 18px;"> [' + start_time_arr[st] + "]" + csv_val_str_final[c].replace('"', '') + '</div>';
+            st++;
         }
 
         start_time_sec = end_time_sec;
         start_time = end_time;
+
 
         while (time_arr_sec.length > 0) {
             time_arr_sec.pop();
@@ -150,7 +192,7 @@ function csv_export() {
         csv += "\n";
     });
 
-    final_csv = csv.replace('undefinedStart time', 'Start time');
+    final_csv = csv.replace('undefined' + rows_final[0], rows_final[0]);
 
     var csvContent = "data:text/csv;charset=utf-8," + final_csv + "\n";
 
@@ -164,11 +206,9 @@ function csv_export() {
 
     link.click(); // This will download the data file named "data_collection.csv".
 
-    var theRemovedElement = rows_final.shift();
-}
-
-function chop_upload() {
     send_csv();
+
+    var theRemovedElement = rows_final.shift();
 }
 
 // This is the datalist
@@ -193,7 +233,7 @@ upload.addEventListener("click", function (e) {
 datalist_value.addEventListener('change', function (e) {
     play_type = "select";
     ls.style.marginTop = '-450px';
-    ls.style.marginLeft = '900px';
+    ls.style.marginLeft = '1100px';
     ls.style.marginRight = '50px';
 
     datalist_value_selected = datalist_value.value;
@@ -216,6 +256,9 @@ datalist_value.addEventListener('change', function (e) {
     video_scr.style.padding = "5px";
 });
 
+var csv_val_arr;
+var csv_val_str;
+var csv_val_str_final;
 
 $(document).ready(function () {
     $("#notification_email_id").change(function (e) {
@@ -230,6 +273,15 @@ $(document).ready(function () {
             var reader = new FileReader();
             reader.onload = function (e) {
                 var csv_val = e.target.result.split("\r\n");
+
+                csv_val_arr = e.target.result.split("\n");
+                csv_val_str = csv_val_arr.filter(item => (item != '\"'));
+                csv_val_str_final = csv_val_str.filter(item => (containsNumbers(item) == false));
+
+                counter++;
+                ls.innerHTML += '<div id="box' + counter + '" style="color:rgb(31, 87, 37); font-size: 18px;"> [00:00.00]' + csv_val_str_final[0].replace('"', '') + '</div>';
+                rows[counter] = ["[00:00.00]" + csv_val_str_final[0].replace('"', '')];
+
                 var csv_value = "" + csv_val + "".split(",");
                 var input_data = "";
                 for (var i = 0; i < csv_value.length; i++) {
